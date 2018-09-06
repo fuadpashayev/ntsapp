@@ -1,0 +1,62 @@
+{
+  "project_info": {
+    "project_number": "224103735919",
+    "firebase_url": "https://ntsapp-83e49.firebaseio.com",
+    "project_id": "ntsapp-83e49",
+    "storage_bucket": "ntsapp-83e49.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:224103735919:android:e632e7ef0237ccb1",
+        "android_client_info": {
+          "package_name": "azweb.ntsapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "224103735919-l6c0ev1bb605p6u7r4255nigq9cldtgq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "azweb.ntsapp",
+            "certificate_hash": "528aa30a1535192e2b96c2e792adaff71fab7894"
+          }
+        },
+        {
+          "client_id": "224103735919-12obdmpe5o8gvu0f53j6102fbs1hu6jq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCwEKQ5ooKA1xSER7tQhydVNhp57-oUFUc"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "224103735919-12obdmpe5o8gvu0f53j6102fbs1hu6jq.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "224103735919-98o496p293nabo6c2kjr99v2rk9qq5aj.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "dk.azweb.NTSC"
+              }
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
