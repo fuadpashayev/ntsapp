@@ -1,66 +1,35 @@
 package azweb.ntsapp
 
 import android.content.Context
-import android.graphics.Typeface
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.BaseExpandableListAdapter
+import android.widget.ArrayAdapter
+import android.widget.BaseAdapter
 import android.widget.TextView
+import java.security.AccessController.getContext
 
-class listAdapter(var context:Context,var header:ArrayList<String>,var body:ArrayList<ArrayList<String>> ):BaseExpandableListAdapter() {
-    override fun getGroup(groupPosition: Int): String {
-        return header[groupPosition]
+internal class HashMapArrayAdapter(val context: Context, textViewResourceId:Int, objects:List<Map.Entry<String, Any>>): ArrayAdapter(context, textViewResourceId, objects) {
+    private class ViewHolder {
+        var tV1:TextView
+        var tV2:TextView
     }
-
-    override fun isChildSelectable(groupPosition: Int, childPosition: Int): Boolean {
-        return true
-    }
-
-    override fun hasStableIds(): Boolean {
-        return false
-    }
-
-    override fun getGroupView(groupPosition: Int, isExpanded: Boolean, convertView: View?, parent: ViewGroup?): View? {
+    fun getView(position:Int, convertView:View?, parent:ViewGroup):View {
+        val viewHolder:ViewHolder
         var convertView = convertView
-        if(convertView==null){
-            val inflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-            convertView = inflater.inflate(R.layout.layout_group,null)
+        if (convertView == null)
+        {
+            convertView = LayoutInflater.from(context).inflate(android.R.layout.simple_list_item_2, parent, false)
+            viewHolder = ViewHolder()
+            viewHolder.tV1 = convertView.findViewById(android.R.id.text1) as TextView
+            viewHolder.tV2 = convertView.findViewById(android.R.id.text2) as TextView
+            convertView.setTag(viewHolder)
         }
-        val title = convertView?.findViewById<TextView>(R.id.tv_title)
-        title?.text = getGroup(groupPosition)
-        return convertView
+        else
+            viewHolder = convertView.getTag() as ViewHolder
+        val entry = this.getItem(position) as Map.Entry<String, Any>
+        viewHolder.tV1.setText(entry.getKey())
+        viewHolder.tV2.setText(entry.getValue().toString())
+        return convertView!!
     }
-
-    override fun getChildrenCount(groupPosition: Int): Int {
-        return body[groupPosition].size
-    }
-
-    override fun getChild(groupPosition: Int, childPosition: Int): String {
-        return body[groupPosition][childPosition]
-    }
-
-    override fun getGroupId(groupPosition: Int): Long {
-        return groupPosition.toLong()
-    }
-
-    override fun getChildView(groupPosition: Int, childPosition: Int, isLastChild: Boolean, convertView: View?, parent: ViewGroup?): View? {
-        var convertView = convertView
-        if(convertView==null){
-            val inflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-            convertView = inflater.inflate(R.layout.layout_child,null)
-        }
-        val title = convertView?.findViewById<TextView>(R.id.tv_title)
-        title?.text = getChild(groupPosition,childPosition)
-        return convertView
-    }
-
-    override fun getChildId(groupPosition: Int, childPosition: Int): Long {
-        return childPosition.toLong()
-    }
-
-    override fun getGroupCount(): Int {
-        return header.size
-    }
-
 }
