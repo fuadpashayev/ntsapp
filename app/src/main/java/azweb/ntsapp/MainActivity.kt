@@ -14,8 +14,11 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.row_first.view.*
 import kotlinx.android.synthetic.main.row_first_one.view.*
+import kotlinx.android.synthetic.main.row_second.view.*
 import kotlinx.android.synthetic.main.row_second_one.view.*
+import kotlinx.android.synthetic.main.row_third.view.*
 import java.util.ArrayList
 import java.util.LinkedHashMap
 
@@ -42,16 +45,16 @@ class MainActivity : AppCompatActivity() {
 
 
         val twos = LinkedHashMap<String,LinkedHashMap<String,Any>>()
-        val twos_inside = LinkedHashMap<String,Any>()
 
 
         //tekler
-//        twos["kvm"] = 0
-//        twos["afdækning"] = false
-//        twos["fodpaneler"] = false
-//        twos["opsætning_af"] = "Title"
-//        twos["plet_spartling"] = false
-//        twos["vask_for_nikotin"] = false
+        val ones = LinkedHashMap<String,Any>()
+        ones["kvm"] = 0
+        ones["afdækning"] = false
+        ones["fodpaneler"] = false
+        ones["opsætning_af"] = "Title"
+        ones["plet_spartling"] = false
+        ones["vask_for_nikotin"] = false
 
 
         //dør
@@ -102,6 +105,16 @@ class MainActivity : AppCompatActivity() {
         twos_magnetfilt["vaeg"] = false
         twos["magnetfilt"] = twos_magnetfilt
 
+        //maling
+        val twos_maling = LinkedHashMap<String,Any>()
+        val twos_maling_inside = LinkedHashMap<String,Any>()
+        twos_maling_inside["antal_gange"] = 0
+        twos_maling_inside["glans"] = false
+        twos_maling["loft"] = twos_maling_inside
+        twos_maling["vaeg"] = twos_maling_inside
+        twos["maling"] = twos_maling
+
+
         //radiator
         val twos_radiator = LinkedHashMap<String,Any>()
         twos_radiator["antal"] = 0
@@ -150,38 +163,100 @@ class MainActivity : AppCompatActivity() {
 
 
 
-        //maling
-        val threes = HashMap<String,HashMap<String,HashMap<String,Any>>>()
-        val threes_inside_child = HashMap<String,Any>()
-        val threes_inside_parent = HashMap<String,HashMap<String,Any>>()
-        threes_inside_child["antal_gange"] = 0
-        threes_inside_child["glans"] = false
-        threes_inside_parent["loft"] = threes_inside_child
-        threes_inside_parent["vaeg"] = threes_inside_child
-        threes["maling"] = threes_inside_parent
+
+
+        val okeys = ArrayList(ones.keys)
+        for(key in okeys) {
+            val rowParent = TableLayout(this)
+            val row = TableRow(this)
+
+            val layoutInflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+            val cell = layoutInflater.inflate(R.layout.row_first_one, row, false)
+            cell.text_first.text = ucwords(key.replace("_"," "))
+            if(key=="kvm"){
+                cell.textField_first.visibility = View.GONE
+                cell.switcher_first.visibility = View.GONE
+                cell.numberField_first.visibility = View.VISIBLE
+            }else if(key=="opsætning_af"){
+                cell.switcher_first.visibility = View.GONE
+                cell.numberField_first.visibility = View.GONE
+                cell.textField_first.visibility = View.VISIBLE
+            }else{
+                cell.numberField_first.visibility = View.GONE
+                cell.textField_first.visibility = View.GONE
+                cell.switcher_first.visibility = View.VISIBLE
+            }
 
 
 
+            rowParent.addView(cell)
+            list.addView(rowParent)
+        }
 
 
         val keys = ArrayList(twos.keys)
         for(key in keys){
             val rowParent = TableLayout(this)
+            val rowOuter = TableLayout(this)
             val row = TableRow(this)
             val layoutInflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-            val cell = layoutInflater.inflate(R.layout.row_first_one, row, false)
-            cell.text_first.text = key
-            cell.numberField_first.visibility = View.GONE
-            cell.textField_first.visibility = View.GONE
-            cell.switcher_first.visibility = View.GONE
-            val index = keys.indexOf(key)
+            val cell = layoutInflater.inflate(R.layout.row_first, row, false)
+            cell.rowParentText.text = ucwords(key.replace("_"," "))
             val ckeys = ArrayList(twos[key]?.keys)
+            if(key == "maling")
+                rowOuter.addView(cell)
+            else
+                rowParent.addView(cell)
+
+
+            for(ckey in ckeys){
+                val rowChild = TableRow(this)
+                val layoutInflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+                val cell_child = layoutInflater.inflate(R.layout.row_second_one, rowChild, false)
+                cell_child.text_second.text = ucwords(ckey.replace("_"," "))
+
+                if(ckey == "antal"){
+                    cell_child.textField_second.visibility = View.GONE
+                    cell_child.switcher_second.visibility = View.GONE
+                    cell_child.numberField_second.visibility = View.VISIBLE
+                }else{
+                    cell_child.textField_second.visibility = View.GONE
+                    cell_child.numberField_second.visibility = View.GONE
+                    cell_child.switcher_second.visibility = View.VISIBLE
+                }
+
+                cell_child.visibility = View.GONE
+
+                if(key == "maling"){
+
+                    val itkeys = ArrayList(twos[key]?.keys)
+                    for(itkey in itkeys){
+                        val rowChildInside = TableRow(this)
+                        val layoutInflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+                        val cell_child = layoutInflater.inflate(R.layout.row_third, rowChildInside, false)
+                        cell_child.rowThirdText.text = ucwords(itkey.replace("_", " "))
+                        if(itkey == "antal_gange"){
+                            cell_child.textField_third.visibility = View.GONE
+                            cell_child.switcher_third.visibility = View.GONE
+                            cell_child.numberField_third.visibility = View.VISIBLE
+                        }else{
+                            cell_child.textField_third.visibility = View.GONE
+                            cell_child.numberField_third.visibility = View.GONE
+                            cell_child.switcher_third.visibility = View.VISIBLE
+                        }
+                        rowOuter.addView(cell_child)
+                    }
+
+                    rowParent.addView(rowOuter)
+                }else
+                    rowParent.addView(cell_child)
+                Log.d("-----a",key+" : "+ckey.toString())
+            }
+
+            list.addView(rowParent)
             cell.setOnClickListener {
-                var first = list.getChildAt(index+1)
-                var second = list.getChildAt(index+2)
-                for(ind in 0 until ckeys.size){
-                    val ind = index+ind+1
-                    val view = list.getChildAt(ind)
+                for(ind in 1 until  ckeys.size+1){
+                    val view = rowParent.getChildAt(ind)
                     if(view.visibility == View.VISIBLE)
                         view.visibility = View.GONE
                     else
@@ -190,26 +265,10 @@ class MainActivity : AppCompatActivity() {
                 }
 
             }
-            rowParent.addView(cell)
-            list.addView(rowParent)
 
-            for(ckey in ckeys){
-                var rowChild = TableRow(this)
-                val layoutInflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-                val cell_child = layoutInflater.inflate(R.layout.row_second_one, rowChild, false)
-                cell_child.text_second.text = ckey
-                cell_child.numberField_second.visibility = View.GONE
-                cell_child.textField_second.visibility = View.GONE
-                cell_child.switcher_second.visibility = View.GONE
-                cell_child.visibility = View.GONE
-                row.addView(cell_child,index+1)
-                Log.d("-----a",ckey.toString())
-            }
+
 
         }
-
-
-
 
 
     }
