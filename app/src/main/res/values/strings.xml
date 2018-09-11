@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">ntsapp</string>
+    <string name="number_only">number only</string>
+    <string name="text_only">text only</string>
 </resources>
