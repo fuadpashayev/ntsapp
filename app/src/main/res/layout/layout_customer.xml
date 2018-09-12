@@ -3,18 +3,21 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="75dp"
+    android:layout_height="wrap_content"
     android:background="@drawable/border_bottom"
+    android:foreground="?android:selectableItemBackground"
     android:clickable="true"
     android:focusable="true"
-    android:foreground="?android:selectableItemBackground">
+    android:padding="15dp">
 
 
     <TextView
-        android:id="@+id/dataText"
+        android:id="@+id/customerText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="15dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
         android:text="TextView"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
