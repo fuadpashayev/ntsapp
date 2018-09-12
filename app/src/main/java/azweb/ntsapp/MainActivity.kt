@@ -56,13 +56,12 @@ class MainActivity : AppCompatActivity() {
         addCustomer.setOnClickListener {
             val builder = AlertDialog.Builder(this)
             builder.setTitle(Html.fromHtml("<font color='#5a5a5a'>Create Work</font>"))
-            val input = EditText(this)
             val inflater = layoutInflater.inflate(R.layout.dialog,null)
             builder.setView(inflater)
             builder.setPositiveButton("OK", object:DialogInterface.OnClickListener{
                override fun onClick(dialog:DialogInterface, which:Int) {
                     val customerName = inflater.customerName.text.toString()
-                    val data = HashMap<String,Any>()
+                    val data = LinkedHashMap<String,Any>()
                     val query = FirebaseDatabase.getInstance().getReference("customer").push()
                     data["child"] = query.key
                     data["name"] = customerName

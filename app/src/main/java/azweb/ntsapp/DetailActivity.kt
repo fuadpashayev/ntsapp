@@ -6,13 +6,17 @@ import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
+import android.view.animation.AnimationUtils
 import android.widget.ExpandableListView
 import android.widget.TableLayout
 import android.widget.TableRow
 import android.widget.TextView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import kotlinx.android.synthetic.main.activity_detail.*
 import kotlinx.android.synthetic.main.activity_room.*
 import kotlinx.android.synthetic.main.row_first.view.*
@@ -40,10 +44,22 @@ class DetailActivity : AppCompatActivity() {
         val data = intent.extras
         val roomName = data.getString("roomName")
         val roomId = data.getString("roomId")
+        val customerId = data.getString("customerId")
         detailHeaderText.text = roomName
+
+        FirebaseDatabase.getInstance().getReference("detail/$customerId/$roomId").addValueEventListener(object:ValueEventListener{
+            override fun onCancelled(p0: DatabaseError?) {}
+            override fun onDataChange(snap: DataSnapshot?) {
+                Log.d("-------hola",snap.toString())
+                for(datas in snap!!.children){
+                    val data = datas.getValue(DetailModel::class.java)
+
+                }
+            }
+
+        })
+
         val twos = LinkedHashMap<String,LinkedHashMap<String,Any>>()
-
-
         //tekler
         val ones = LinkedHashMap<String,Any>()
         ones["kvm"] = 0
@@ -75,9 +91,6 @@ class DetailActivity : AppCompatActivity() {
         twos_grunding["nikotin_stop_gr"] = false
         twos_grunding["vaeg"] = false
         twos["grunding"] = twos_grunding
-
-
-
         //opsaetning af
         //twos["opsaetning_af"] = "Title"
 
@@ -261,10 +274,10 @@ class DetailActivity : AppCompatActivity() {
                         for (ind in inds) {
                             val view = rowParent.getChildAt(ind)
                             if (view.visibility == View.VISIBLE) {
-                                view.visibility = View.GONE
+                                view.collapse()
                                 cell_child.arrow_second.setImageResource(R.drawable.ic_right_arrow)
                             }else {
-                                view.visibility = View.VISIBLE
+                                view.expand()
                                 cell_child.arrow_second.setImageResource(R.drawable.ic_down_arrow)
                             }
 
@@ -291,10 +304,10 @@ class DetailActivity : AppCompatActivity() {
                     for(ind in inds){
                         val view = rowParent.getChildAt(ind)
                         if(view.visibility == View.VISIBLE) {
-                            view.visibility = View.GONE
+                            view.collapse()
                             cell.arrow_first.setImageResource(R.drawable.ic_right_arrow)
                         }else {
-                            view.visibility = View.VISIBLE
+                            view.expand()
                             cell.arrow_first.setImageResource(R.drawable.ic_down_arrow)
                         }
 
@@ -306,10 +319,10 @@ class DetailActivity : AppCompatActivity() {
                     for(ind in 1 until  ckeys.size+1){
                         val view = rowParent.getChildAt(ind)
                         if(view.visibility == View.VISIBLE) {
-                            view.visibility = View.GONE
+                            view.collapse()
                             cell.arrow_first.setImageResource(R.drawable.ic_right_arrow)
                         }else {
-                            view.visibility = View.VISIBLE
+                            view.expand()
                             cell.arrow_first.setImageResource(R.drawable.ic_down_arrow)
                         }
                         if(ind == ckeys.size){

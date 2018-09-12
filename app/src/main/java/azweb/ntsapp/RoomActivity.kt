@@ -18,6 +18,7 @@ import com.google.firebase.database.FirebaseDatabase
 import kotlinx.android.synthetic.main.activity_room.*
 import kotlinx.android.synthetic.main.dialog.view.*
 import kotlinx.android.synthetic.main.layout_customer.view.*
+import java.util.LinkedHashMap
 
 
 class RoomActivity : AppCompatActivity() {
@@ -43,12 +44,13 @@ class RoomActivity : AppCompatActivity() {
                     loader.visibility = View.VISIBLE
                     loader.bringToFront()
                     val intent = Intent(this@RoomActivity,DetailActivity::class.java)
+                    intent.putExtra("customerId",customerId)
                     intent.putExtra("roomId",model.child)
                     intent.putExtra("roomName",model.name)
                     startActivity(intent)
-                    Handler().postDelayed({
-                        loader.visibility = View.GONE
-                    },500)
+
+                    loader.visibility = View.GONE
+
                 }
             }
 
@@ -68,7 +70,145 @@ class RoomActivity : AppCompatActivity() {
                 data["child"] = query.key
                 data["name"] = roomName
                 query.setValue(data)
+
+
+
+
+
+
+
+                val twos = LinkedHashMap<String, Any>()
+                //tekler
+
+                twos["kvm"] = 0
+                twos["afdækning"] = false
+                twos["vask_for_nikotin"] = false
+                twos["plet_spartling"] = false
+                twos["fodpaneler"] = false
+
+                //tapet_skrubning
+                val twos_tapet_skrubning = LinkedHashMap<String,Any>()
+                twos_tapet_skrubning["antal"] = false
+                twos["tapet_skrubning"] = twos_tapet_skrubning
+
+                //fuldspartling
+                val twos_fuldspartling = LinkedHashMap<String,Any>()
+                twos_fuldspartling["antal"] = 0
+                twos["fuldspartling"] = twos_fuldspartling
+
+                //slibning
+                val twos_slibning = LinkedHashMap<String,Any>()
+                twos_slibning["loft"] = false
+                twos_slibning["vaeg"] = false
+                twos["slibning"] = twos_slibning
+
+                //grunding
+                val twos_grunding = LinkedHashMap<String,Any>()
+                twos_grunding["knaste_grundes"] = false
+                twos_grunding["loft"] = false
+                twos_grunding["nikotin_stop_gr"] = false
+                twos_grunding["vaeg"] = false
+                twos["grunding"] = twos_grunding
+
+                //opsaetning af
+                twos["opsaetning_af"] = "Title"
+
+                //filt
+                val twos_filt = LinkedHashMap<String,Any>()
+                twos_filt["loft"] = false
+                twos_filt["vaeg"] = false
+                twos["filt"] = twos_filt
+
+                //tapet
+                val twos_tapet = LinkedHashMap<String,Any>()
+                twos_tapet["loft"] = false
+                twos_tapet["vaeg"] = false
+                twos["tapet"] = twos_tapet
+
+                //glasvæv
+                val twos_glasvaev = LinkedHashMap<String,Any>()
+                twos_glasvaev["loft"] = false
+                twos_glasvaev["vaeg"] = false
+                twos["glasvæv"] = twos_glasvaev
+
+                //fototapet
+                val twos_fototapet = LinkedHashMap<String,Any>()
+                twos_fototapet["loft"] = false
+                twos_fototapet["vaeg"] = false
+                twos["fototapet"] = twos_fototapet
+
+                //specieltapet
+                val twos_specieltapet = LinkedHashMap<String,Any>()
+                twos_specieltapet["loft"] = false
+                twos_specieltapet["vaeg"] = false
+                twos["specieltapet"] = twos_specieltapet
+
+                //magnetfilt
+                val twos_magnetfilt = LinkedHashMap<String,Any>()
+                twos_magnetfilt["loft"] = false
+                twos_magnetfilt["vaeg"] = false
+                twos["magnetfilt"] = twos_magnetfilt
+
+                //maling
+                val twos_maling = LinkedHashMap<String,Any>()
+                val twos_maling_inside = LinkedHashMap<String,Any>()
+                twos_maling_inside["antal_gange"] = 0
+                twos_maling_inside["glans"] = false
+                twos_maling["loft"] = twos_maling_inside
+                twos_maling["vaeg"] = twos_maling_inside
+                twos["maling"] = twos_maling
+
+                //radiator
+                val twos_radiator = LinkedHashMap<String,Any>()
+                twos_radiator["antal"] = 0
+                twos_radiator["grundes"] = false
+                twos_radiator["males"] = false
+                twos_radiator["pletspartles"] = false
+                twos_radiator["slibes"] = false
+                twos_radiator["spartles"] = false
+                twos_radiator["vaskes"] = false
+                twos["radiator"] = twos_radiator
+
+                //dør
+                val twos_dor = LinkedHashMap<String,Any>()
+                twos_dor["antal"] = 0
+                twos_dor["grundes"] = false
+                twos_dor["males"] = false
+                twos_dor["pletspartles"] = false
+                twos_dor["slibes"] = false
+                twos_dor["spartles"] = false
+                twos_dor["vaskes"] = false
+                twos["dør"] = twos_dor
+
+                //rør
+                val twos_ror = LinkedHashMap<String,Any>()
+                twos_ror["antal"] = 0
+                twos_ror["grundes"] = false
+                twos_ror["males"] = false
+                twos_ror["pletspartles"] = false
+                twos_ror["slibes"] = false
+                twos_ror["spartles"] = false
+                twos_ror["vaskes"] = false
+                twos["rør"] = twos_ror
+
+
+                val queryDetails = FirebaseDatabase.getInstance().getReference("detail/$customerId").push()
+                twos["child"] = queryDetails.key
+                queryDetails.setValue(twos)
+
+
+
+
+
+
+
+
+
+
+
+
                 val intent = Intent(this@RoomActivity,DetailActivity::class.java)
+                intent.putExtra("customerId",customerId)
                 intent.putExtra("roomId",query.key)
                 intent.putExtra("roomName",roomName)
                 startActivity(intent)
