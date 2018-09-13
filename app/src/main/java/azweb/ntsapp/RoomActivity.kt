@@ -1,6 +1,7 @@
 package azweb.ntsapp
 
 
+import android.app.Dialog
 import android.content.DialogInterface
 import android.content.Intent
 import android.support.v7.app.AppCompatActivity
@@ -9,14 +10,20 @@ import android.os.Handler
 import android.support.v7.app.AlertDialog
 import android.text.Html
 import android.util.Log
+import android.view.Gravity
 import android.view.View
 import android.widget.EditText
+import android.widget.TextView
 import com.firebase.ui.database.FirebaseRecyclerAdapter
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import kotlinx.android.synthetic.main.activity_room.*
 import kotlinx.android.synthetic.main.dialog.view.*
+import kotlinx.android.synthetic.main.layout_customer.*
 import kotlinx.android.synthetic.main.layout_customer.view.*
 import java.util.LinkedHashMap
 
@@ -36,27 +43,91 @@ class RoomActivity : AppCompatActivity() {
         val customerId = data.getString("customerId")
         roomHeaderText.text = customerName
         val query = FirebaseDatabase.getInstance().getReference("rooms/$customerId")
+        query.addListenerForSingleValueEvent(object:ValueEventListener{
+            override fun onCancelled(p0: DatabaseError?) {}
+            override fun onDataChange(snap: DataSnapshot?) {
+                if(!snap!!.exists())
+                    loader.visibility = View.GONE
+            }
+
+        })
+        val deleteList = arrayListOf<String?>()
         val roomAdapter = object:FirebaseRecyclerAdapter<RoomModel,RoomHolder>(RoomModel::class.java,R.layout.layout_customer,RoomHolder::class.java,query){
             override fun populateViewHolder(viewHolder: RoomHolder?, model: RoomModel?, position: Int) {
                 loader.visibility = View.GONE
                 viewHolder!!.itemView.customerText.text = model!!.name
                 viewHolder.itemView.setOnClickListener {
-                    loader.visibility = View.VISIBLE
-                    loader.bringToFront()
-                    val intent = Intent(this@RoomActivity,DetailActivity::class.java)
-                    intent.putExtra("customerId",customerId)
-                    intent.putExtra("roomId",model.child)
-                    intent.putExtra("roomName",model.name)
-                    startActivity(intent)
+                    if(deleteList.size==0) {
+                        loader.visibility = View.VISIBLE
+                        loader.bringToFront()
+                        val intent = Intent(this@RoomActivity, DetailActivity::class.java)
+                        intent.putExtra("customerId", customerId)
+                        intent.putExtra("roomId", model.child)
+                        intent.putExtra("roomName", model.name)
+                        startActivity(intent)
 
-                    loader.visibility = View.GONE
+                        Handler().post{loader.visibility = View.GONE}
+                    }else{
+                        if(deleteList.contains(model.child)){
+                            viewHolder.itemView.deleteCheckBox.visibility = View.GONE
+                            deleteList.remove(model.child)
+                            if(deleteList.size==0)
+                                deleteRoom.visibility = View.GONE
+                        }else{
+                            viewHolder.itemView.deleteCheckBox.visibility = View.VISIBLE
+                            deleteList.add(model.child)
+                        }
 
+                     }
+
+                }
+
+                viewHolder.itemView.setOnLongClickListener {
+                    if(deleteList.size==0){
+                        deleteRoom.visibility = View.VISIBLE
+                        viewHolder.itemView.deleteCheckBox.visibility = View.VISIBLE
+                        deleteList.add(model.child)
+                    }
+                    true
                 }
             }
 
         }
 
         roomList.adapter = roomAdapter
+        back.setOnClickListener {
+            finish()
+        }
+        deleteRoom.setOnClickListener {
+            if(deleteList.size>0){
+                val builder = AlertDialog.Builder(this@RoomActivity)
+                val title = TextView(this@RoomActivity)
+                title.text = Html.fromHtml("Are you sure to delete <font color='#3F51B5'>selected rooms</font> ?")
+                title.setPadding(15, 100, 15, 20)
+                title.gravity = Gravity.CENTER_HORIZONTAL
+                title.textSize = 15f
+                title.setTextColor(resources.getColor(R.color.semiBlack))
+                builder.setCustomTitle(title)
+
+                builder.setNegativeButton("Cancel") { _, _ -> }
+                builder.setPositiveButton("Delete") { dialogInterface, i ->
+                    for(room in deleteList) {
+                        val ref = FirebaseDatabase.getInstance()
+                        ref.getReference("rooms/$customerId/$room").removeValue()
+                        ref.getReference("detail/$customerId/$room").removeValue()
+                    }
+                    deleteList.clear()
+                    deleteRoom.visibility = View.GONE
+                }
+                builder.setCancelable(true)
+                val dialog = builder.create()
+                dialog.show()
+                dialog.getButton(Dialog.BUTTON_NEGATIVE).setTextColor(resources.getColor(R.color.colorPrimary))
+                dialog.getButton(Dialog.BUTTON_POSITIVE).setTextColor(resources.getColor(R.color.colorPrimary))
+
+            }
+
+        }
         addRoom.setOnClickListener {
             val builder = AlertDialog.Builder(this)
             builder.setTitle(Html.fromHtml("<font color='#5a5a5a'>Select Room</font>"))
@@ -68,6 +139,7 @@ class RoomActivity : AppCompatActivity() {
                 val query = FirebaseDatabase.getInstance().getReference("rooms/${customerId}").push()
                 val data = HashMap<String,Any>()
                 data["child"] = query.key
+                val roomId = query.key
                 data["name"] = roomName
                 query.setValue(data)
 
@@ -88,13 +160,13 @@ class RoomActivity : AppCompatActivity() {
 
                 //tapet_skrubning
                 val twos_tapet_skrubning = LinkedHashMap<String,Any>()
-                twos_tapet_skrubning["antal"] = false
+                twos_tapet_skrubning["antal"] = 0
                 twos["tapet_skrubning"] = twos_tapet_skrubning
 
                 //fuldspartling
                 val twos_fuldspartling = LinkedHashMap<String,Any>()
                 twos_fuldspartling["antal"] = 0
-                twos["fuldspartling"] = twos_fuldspartling
+                twos["fuld_spartling"] = twos_fuldspartling
 
                 //slibning
                 val twos_slibning = LinkedHashMap<String,Any>()
@@ -192,7 +264,7 @@ class RoomActivity : AppCompatActivity() {
                 twos["rør"] = twos_ror
 
 
-                val queryDetails = FirebaseDatabase.getInstance().getReference("detail/$customerId").push()
+                val queryDetails = FirebaseDatabase.getInstance().getReference("detail/$customerId/$roomId")
                 twos["child"] = queryDetails.key
                 queryDetails.setValue(twos)
 

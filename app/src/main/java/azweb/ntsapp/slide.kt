@@ -5,7 +5,7 @@ import android.view.WindowManager
 import android.view.animation.Animation
 import android.view.animation.Transformation
 
-fun View.expand() {
+fun View.expand(percent:Double=3.1) {
     val v = this
     v.visibility = View.VISIBLE
     v.measure(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT)
@@ -18,7 +18,7 @@ fun View.expand() {
             v.getLayoutParams().height = if (interpolatedTime == 1f)
                 WindowManager.LayoutParams.WRAP_CONTENT
             else
-                (targetHeight * interpolatedTime*3.1).toInt()
+                (targetHeight * interpolatedTime*percent).toInt()
             v.requestLayout()
         }
         override fun willChangeBounds():Boolean {
