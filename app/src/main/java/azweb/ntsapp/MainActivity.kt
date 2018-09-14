@@ -4,8 +4,11 @@ package azweb.ntsapp
 import android.app.Dialog
 import android.content.DialogInterface
 import android.content.Intent
+import android.os.Build
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v4.content.ContextCompat
+import android.support.v4.graphics.drawable.DrawableCompat
 import android.support.v7.app.AlertDialog
 import android.text.Html
 import android.view.View
@@ -18,6 +21,12 @@ import kotlinx.android.synthetic.main.dialog.view.*
 import kotlinx.android.synthetic.main.layout_customer.view.*
 import android.view.Gravity
 import android.widget.TextView
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.storage.FirebaseStorage
+import kotlinx.android.synthetic.main.layout_customer.*
+import java.security.AccessController.getContext
 
 
 class MainActivity : AppCompatActivity() {
@@ -35,9 +44,9 @@ class MainActivity : AppCompatActivity() {
         val deleteList = arrayListOf<String?>()
         val customerAdapter = object:FirebaseRecyclerAdapter<CustomerModel,CustomerHolder>(CustomerModel::class.java,R.layout.layout_customer,CustomerHolder::class.java,query){
             override fun populateViewHolder(viewHolder: CustomerHolder?, model: CustomerModel?, position: Int) {
-
                 loader.visibility = View.GONE
                 viewHolder!!.itemView.customerText.text = model!!.name
+                viewHolder.itemView.deleteCheckBox.visibility = View.GONE
                 viewHolder.itemView.setOnClickListener {
                     if(deleteList.size==0) {
                         val intent = Intent(this@MainActivity, RoomActivity::class.java)
@@ -84,12 +93,14 @@ class MainActivity : AppCompatActivity() {
 
                 builder.setNegativeButton("Cancel") { _, _ -> }
                 builder.setPositiveButton("Delete") { dialogInterface, i ->
+                    loader.visibility = View.VISIBLE
                     for(customer in deleteList) {
                         val ref = FirebaseDatabase.getInstance()
                         ref.getReference("customer/$customer").removeValue()
                         ref.getReference("rooms/$customer").removeValue()
                         ref.getReference("detail/$customer").removeValue()
                     }
+                    loader.visibility = View.GONE
                     deleteList.clear()
                     deleteCustomer.visibility = View.GONE
                 }

@@ -21,6 +21,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.android.synthetic.main.activity_room.*
 import kotlinx.android.synthetic.main.dialog.view.*
 import kotlinx.android.synthetic.main.layout_customer.*
@@ -56,6 +57,7 @@ class RoomActivity : AppCompatActivity() {
             override fun populateViewHolder(viewHolder: RoomHolder?, model: RoomModel?, position: Int) {
                 loader.visibility = View.GONE
                 viewHolder!!.itemView.customerText.text = model!!.name
+                viewHolder.itemView.deleteCheckBox.visibility = View.GONE
                 viewHolder.itemView.setOnClickListener {
                     if(deleteList.size==0) {
                         loader.visibility = View.VISIBLE
@@ -111,11 +113,13 @@ class RoomActivity : AppCompatActivity() {
 
                 builder.setNegativeButton("Cancel") { _, _ -> }
                 builder.setPositiveButton("Delete") { dialogInterface, i ->
+                    loader.visibility = View.VISIBLE
                     for(room in deleteList) {
                         val ref = FirebaseDatabase.getInstance()
                         ref.getReference("rooms/$customerId/$room").removeValue()
                         ref.getReference("detail/$customerId/$room").removeValue()
                     }
+                    loader.visibility = View.GONE
                     deleteList.clear()
                     deleteRoom.visibility = View.GONE
                 }

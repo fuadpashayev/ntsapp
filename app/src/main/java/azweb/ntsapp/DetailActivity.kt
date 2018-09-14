@@ -1,6 +1,8 @@
 package azweb.ntsapp
 
 import android.app.Activity
+import android.app.AlertDialog
+import android.app.Dialog
 import android.content.Context
 import android.media.Image
 import android.support.v7.app.AppCompatActivity
@@ -26,35 +28,46 @@ import kotlinx.android.synthetic.main.row_first_one.view.*
 import kotlinx.android.synthetic.main.row_second.view.*
 import kotlinx.android.synthetic.main.row_second_one.view.*
 import kotlinx.android.synthetic.main.row_third.view.*
-import java.util.ArrayList
-import java.util.LinkedHashMap
-
-
-
+import android.content.Intent
+import android.graphics.Bitmap
+import android.net.Uri
+import android.os.Environment
+import android.os.StrictMode
+import android.provider.MediaStore
+import com.google.firebase.storage.FirebaseStorage
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.util.*
 
 
 class DetailActivity : AppCompatActivity() {
 
     var user:FirebaseUser?=null
     var auth:FirebaseAuth?=null
+    var customerId:String?=null
+    var roomId:String?=null
+    var addedNewImage = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_detail)
+        val builder = StrictMode.VmPolicy.Builder()
+        StrictMode.setVmPolicy(builder.build())
         auth = FirebaseAuth.getInstance()
         user = auth?.currentUser
         supportActionBar!!.hide()
         val data = intent.extras
         val roomName = data.getString("roomName")
-        val roomId = data.getString("roomId")
-        val customerId = data.getString("customerId")
+        roomId = data.getString("roomId")
+        customerId = data.getString("customerId")
         detailHeaderText.text = roomName
 
-        FirebaseDatabase.getInstance().getReference("detail/$customerId/$roomId").addValueEventListener(object:ValueEventListener{
+        FirebaseDatabase.getInstance().getReference("detail/$customerId/$roomId").addListenerForSingleValueEvent(object:ValueEventListener{
             override fun onCancelled(p0: DatabaseError?) {}
             override fun onDataChange(snap:DataSnapshot?) {
                 loader.visibility = View.GONE
                 val ones = LinkedHashMap<String,Any>()
                 val twos = LinkedHashMap<String,LinkedHashMap<String,Any>>()
+                list.removeAllViews()
                 for(datas in snap!!.children){
                     //tekler
 
@@ -404,32 +417,25 @@ class DetailActivity : AppCompatActivity() {
                                 }
 
                             }
-                            val index = keys.indexOf(key)
-                            val lastIndex = keys.size-1
-                            if(index==lastIndex) {
-                                scrollMain.postDelayed({ scrollMain.fullScroll(View.FOCUS_DOWN)},350)
-                            }
-
-
-
 
                         }
                     }
 
                 }
 
-
+                imageLabel.visibility = View.VISIBLE
+                imageList.visibility = View.VISIBLE
             }
 
 
 
         })
+
         FirebaseDatabase.getInstance().getReference("detail/$customerId/$roomId/images").addChildEventListener(object:ChildEventListener{
             override fun onCancelled(p0: DatabaseError?) {}
             override fun onChildMoved(p0: DataSnapshot?, p1: String?) {}
-            override fun onChildChanged(snap: DataSnapshot?, p1: String?) {
-
-            }
+            override fun onChildRemoved(p0: DataSnapshot?) {}
+            override fun onChildChanged(snap: DataSnapshot?, p1: String?) {}
             override fun onChildAdded(snap: DataSnapshot?, p1: String?) {
                 class imageClass{
                     var imageURL:String?=null
@@ -438,46 +444,110 @@ class DetailActivity : AppCompatActivity() {
                         this.imageURL = imageURL
                     }
                 }
-                imageLabel.visibility = View.VISIBLE
                     val imageData = snap!!.getValue(imageClass::class.java)
                     val image = ImageView(this@DetailActivity)
                     image.setBackgroundResource(R.drawable.border_all)
-                    Log.d("-------a",imageData!!.imageURL)
-                    val params = ConstraintLayout.LayoutParams(150.dp,140.dp)
-                    params.setMargins(10.dp,5.dp,10.dp,5.dp)
+                    val params = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,100.dp)
+                    params.setMargins(5.dp,5.dp,5.dp,5.dp)
                     image.adjustViewBounds = true
-                    image.scaleType = ImageView.ScaleType.CENTER_CROP
                     image.clipToOutline = true
+                    image.scaleType = ImageView.ScaleType.FIT_XY
                     image.elevation = (1.dp).toFloat()
                     image.layoutParams = params
 
+                    if(applicationContext!=null) {
+                        Glide.with(applicationContext)
+                                .load(imageData!!.imageURL)
+                                .thumbnail(Glide.with(this@DetailActivity).load(R.mipmap.image))
+                                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                                .crossFade()
+                                .into(image)
+                        imageListData.addView(image)
+                    }
 
-
-                    Glide.with(this@DetailActivity)
-                            .load(imageData.imageURL)
-                            .thumbnail(Glide.with(this@DetailActivity).load(R.mipmap.image))
-                            .diskCacheStrategy(DiskCacheStrategy.ALL)
-                            .crossFade()
-                            .into(image)
-                    imageListData.addView(image)
-
-
+                if(addedNewImage) {
+                    Handler().postDelayed({
+                        imageList.fullScroll(View.FOCUS_RIGHT)
+                        addImage.visibility = View.VISIBLE
+                        loaderImage.visibility = View.GONE
+                    },350)
+                }
 
             }
 
-            override fun onChildRemoved(p0: DataSnapshot?) {
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-            }
+
 
         })
         back.setOnClickListener {
             finish()
         }
         addImage.setOnClickListener {
-            val newImg = "https://firebasestorage.googleapis.com/v0/b/ntsapp-83e49.appspot.com/o/images%2FAE3C3DC9-657A-400B-9C8B-7998516B02C2?alt=media&token=c8587017-c865-420d-9faa-eee34eaa0bf9"
-            val data = HashMap<String,Any>()
-            data["imageURL"] = newImg
-            FirebaseDatabase.getInstance().getReference("detail/$customerId/$roomId/images").push().setValue(data)
+            val builder = AlertDialog.Builder(this)
+            builder.setCancelable(true)
+            builder.setNegativeButton("Cancel"){_,_->}
+            val items = arrayOf("Select From Gallery","Select From Camera")
+
+            builder.setItems(items){_,item->
+                when(item){
+                    0->{
+                        val intent = Intent()
+                        intent.type = "image/*"
+                        intent.action = Intent.ACTION_GET_CONTENT
+                        startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE)
+                    }
+                    1->{
+                        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+                        file = File(externalCacheDir,fileName)
+                        fileUri = Uri.fromFile(file)
+                        intent.putExtra(MediaStore.EXTRA_OUTPUT,fileUri)
+
+                        startActivityForResult(intent,PICK_CAMERA)
+                    }
+                }
+                addImage.visibility = View.GONE
+                loaderImage.visibility = View.VISIBLE
+            }
+
+            val dialog = builder.create()
+            dialog.show()
+            dialog.getButton(Dialog.BUTTON_NEGATIVE).setTextColor(resources.getColor(R.color.colorPrimary))
+
+
+
+
+
+        }
+
+    }
+
+    val PICK_IMAGE = 0
+    val PICK_CAMERA = 1
+    var file:File?=null
+    var fileUri:Uri?=null
+    val fileName = (System.currentTimeMillis()+rand(1000000,9999999)).toString()+".jpg"
+    public override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if(resultCode==Activity.RESULT_CANCELED){
+            addImage.visibility = View.VISIBLE
+            loaderImage.visibility = View.GONE
+        }
+        if(resultCode == Activity.RESULT_OK && data!=null) {
+            if (requestCode == PICK_IMAGE) {
+                val image = data.data
+                FirebaseStorage.getInstance().getReference("images/$fileName").putFile(image).addOnSuccessListener {
+                    val data = HashMap<String,Any>()
+                    data["imageURL"] = it.downloadUrl.toString()
+                    FirebaseDatabase.getInstance().getReference("detail/$customerId/$roomId/images").push().setValue(data)
+                    addedNewImage = true
+                }
+
+            }
+        }else if(resultCode==-1 && fileUri!=null && requestCode == PICK_CAMERA){
+            FirebaseStorage.getInstance().getReference("images/$fileName").putFile(fileUri!!).addOnSuccessListener {
+                val data = HashMap<String,Any>()
+                data["imageURL"] = it.downloadUrl.toString()
+                FirebaseDatabase.getInstance().getReference("detail/$customerId/$roomId/images").push().setValue(data)
+                addedNewImage = true
+            }
         }
 
     }
@@ -485,7 +555,10 @@ class DetailActivity : AppCompatActivity() {
 
     val Int.dp: Int get() = (this * resources.displayMetrics.density).toInt()
 
-
+    fun rand(min:Int,max:Int):Int{
+        val rand = Random().nextInt(max-min)+min
+        return rand
+    }
     fun ucwords(str:String):String{
         val str = str
         val listStr:List<String>
