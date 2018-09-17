@@ -4,17 +4,13 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.app.Dialog
 import android.content.Context
-import android.media.Image
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
-import android.support.constraint.ConstraintLayout
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
-import android.view.animation.AnimationUtils
 import android.widget.*
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
@@ -23,21 +19,26 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.*
 import kotlinx.android.synthetic.main.activity_detail.*
 import kotlinx.android.synthetic.main.row_first.view.*
-import kotlinx.android.synthetic.main.row_first_one.*
 import kotlinx.android.synthetic.main.row_first_one.view.*
 import kotlinx.android.synthetic.main.row_second.view.*
 import kotlinx.android.synthetic.main.row_second_one.view.*
 import kotlinx.android.synthetic.main.row_third.view.*
 import android.content.Intent
-import android.graphics.Bitmap
 import android.net.Uri
-import android.os.Environment
+import android.os.Build
 import android.os.StrictMode
 import android.provider.MediaStore
+import android.support.v4.view.ViewPager
+import android.util.Log
+import android.util.TypedValue
+import android.view.MotionEvent
+import com.davidmiguel.dragtoclose.DragListener
 import com.google.firebase.storage.FirebaseStorage
-import java.io.ByteArrayOutputStream
 import java.io.File
+import java.lang.reflect.Type
+import java.text.FieldPosition
 import java.util.*
+import kotlin.collections.ArrayList
 
 
 class DetailActivity : AppCompatActivity() {
@@ -60,6 +61,7 @@ class DetailActivity : AppCompatActivity() {
         roomId = data.getString("roomId")
         customerId = data.getString("customerId")
         detailHeaderText.text = roomName
+
 
         FirebaseDatabase.getInstance().getReference("detail/$customerId/$roomId").addListenerForSingleValueEvent(object:ValueEventListener{
             override fun onCancelled(p0: DatabaseError?) {}
@@ -202,19 +204,19 @@ class DetailActivity : AppCompatActivity() {
                     if(key=="kvm"){
                         cell.switcher_first.visibility = View.GONE
                         cell.numberField_first.visibility = View.VISIBLE
-                        cell.numberField_first.setText(ones[key].toString())
+                        val number = if(ones[key]==0) "" else ones[key].toString()
+                        cell.numberField_first.setText(number)
                         cell.numberField_first.addTextChangedListener(object:TextWatcher{
                             override fun afterTextChanged(p0: Editable?) {}
                             override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
                             override fun onTextChanged(text: CharSequence?, p1: Int, p2: Int, p3: Int) {
 
-                                Handler().postDelayed({
-                                    val data = HashMap<String,Any>()
-                                    val text = text.toString()
-                                    val num = if(text!="") text.toInt() else 0
-                                    data[key] = num
-                                    FirebaseDatabase.getInstance().getReference("detail/$customerId/$roomId").updateChildren(data)
-                                },500)
+                                val data = HashMap<String,Any>()
+                                val text = text.toString()
+                                val num = if(text!="") text.toInt() else 0
+                                data[key] = num
+                                FirebaseDatabase.getInstance().getReference("detail/$customerId/$roomId").updateChildren(data)
+
                             }
 
                         })
@@ -222,13 +224,10 @@ class DetailActivity : AppCompatActivity() {
                         cell.numberField_first.visibility = View.GONE
                         cell.switcher_first.visibility = View.VISIBLE
                         cell.switcher_first.isChecked = ones[key] as Boolean
-                        cell.switcher_first.setOnCheckedChangeListener { compoundButton, checked ->
-                          Handler().postDelayed({
-                              val data = HashMap<String,Any>()
-                              data[key] = checked
-                              FirebaseDatabase.getInstance().getReference("detail/$customerId/$roomId").updateChildren(data)
-                          },200)
-
+                        cell.switcher_first.setOnCheckedChangeListener { _, checked ->
+                            val data = HashMap<String,Any>()
+                            data[key] = checked
+                            FirebaseDatabase.getInstance().getReference("detail/$customerId/$roomId").updateChildren(data)
                         }
                     }
 
@@ -249,7 +248,7 @@ class DetailActivity : AppCompatActivity() {
                     val layoutInflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
                     val cell = layoutInflater.inflate(R.layout.row_first, row, false)
                     cell.rowParentText.text = ucwords(key.replace("_"," "))
-                    val ckeys = ArrayList((twos[key] as LinkedHashMap<String,Any>)?.keys)
+                    val ckeys = ArrayList((twos[key] as LinkedHashMap<String,Any>).keys)
                     rowParent.addView(cell)
 
 
@@ -266,19 +265,17 @@ class DetailActivity : AppCompatActivity() {
                             if(ckey == "antal"){
                                 cell_child.switcher_second.visibility = View.GONE
                                 cell_child.numberField_second.visibility = View.VISIBLE
-                                cell_child.numberField_second.setText(twos[key]!![ckey].toString())
+                                val number = if(twos[key]!![ckey]==0) "" else twos[key]!![ckey].toString()
+                                cell_child.numberField_second.setText(number)
                                 cell_child.numberField_second.addTextChangedListener(object:TextWatcher{
                                     override fun afterTextChanged(p0: Editable?) {}
                                     override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
                                     override fun onTextChanged(text: CharSequence?, p1: Int, p2: Int, p3: Int) {
-
-                                        Handler().postDelayed({
-                                            val data = HashMap<String,Any>()
-                                            val text = text.toString()
-                                            val num = if(text!="") text.toInt() else 0
-                                            data[ckey] = num
-                                            FirebaseDatabase.getInstance().getReference("detail/$customerId/$roomId/$key").updateChildren(data)
-                                        },500)
+                                        val data = HashMap<String,Any>()
+                                        val text = text.toString()
+                                        val num = if(text!="") text.toInt() else 0
+                                        data[ckey] = num
+                                        FirebaseDatabase.getInstance().getReference("detail/$customerId/$roomId/$key").updateChildren(data)
                                     }
 
                                 })
@@ -286,13 +283,10 @@ class DetailActivity : AppCompatActivity() {
                                 cell_child.numberField_second.visibility = View.GONE
                                 cell_child.switcher_second.visibility = View.VISIBLE
                                 cell_child.switcher_second.isChecked = twos[key]!![ckey] as Boolean
-                                cell_child.switcher_second.setOnCheckedChangeListener { compoundButton, checked ->
-                                    Handler().postDelayed({
-                                        val data = HashMap<String,Any>()
-                                        data[ckey] = checked
-                                        FirebaseDatabase.getInstance().getReference("detail/$customerId/$roomId/$key").updateChildren(data)
-                                    },200)
-
+                                cell_child.switcher_second.setOnCheckedChangeListener { _, checked ->
+                                    val data = HashMap<String,Any>()
+                                    data[ckey] = checked
+                                    FirebaseDatabase.getInstance().getReference("detail/$customerId/$roomId/$key").updateChildren(data)
                                 }
 
                             }
@@ -307,7 +301,7 @@ class DetailActivity : AppCompatActivity() {
                         rowParent.addView(cell_child)
 
                         if(key == "maling"){
-                            val prnt = (twos[key]!! as LinkedHashMap<String,Any>)[ckey] as HashMap<String,Any>
+                            val prnt = (twos[key]!!)[ckey] as HashMap<String,Any>
                             val itkeys = ArrayList(prnt.keys)
 
                             for(itkey in itkeys){
@@ -318,19 +312,17 @@ class DetailActivity : AppCompatActivity() {
                                 if(itkey == "antal_gange"){
                                     cell.switcher_third.visibility = View.GONE
                                     cell.numberField_third.visibility = View.VISIBLE
-                                    cell.numberField_third.setText(prnt[itkey].toString())
+                                    val number = if(prnt[itkey]==0) "" else prnt[itkey].toString()
+                                    cell.numberField_third.setText(number)
                                     cell.numberField_third.addTextChangedListener(object:TextWatcher{
                                         override fun afterTextChanged(p0: Editable?) {}
                                         override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
                                         override fun onTextChanged(text: CharSequence?, p1: Int, p2: Int, p3: Int) {
-
-                                            Handler().postDelayed({
-                                                val data = HashMap<String,Any>()
-                                                val text = text.toString()
-                                                val num = if(text!="") text.toInt() else 0
-                                                data[itkey] = num
-                                                FirebaseDatabase.getInstance().getReference("detail/$customerId/$roomId/$key/$ckey").updateChildren(data)
-                                            },500)
+                                            val data = HashMap<String,Any>()
+                                            val text = text.toString()
+                                            val num = if(text!="") text.toInt() else 0
+                                            data[itkey] = num
+                                            FirebaseDatabase.getInstance().getReference("detail/$customerId/$roomId/$key/$ckey").updateChildren(data)
                                         }
 
                                     })
@@ -339,12 +331,9 @@ class DetailActivity : AppCompatActivity() {
                                     cell.switcher_third.visibility = View.VISIBLE
                                     cell.switcher_third.isChecked = prnt[itkey] as Boolean
                                     cell.switcher_third.setOnCheckedChangeListener { compoundButton, checked ->
-                                        Handler().postDelayed({
-                                            val data = HashMap<String,Any>()
-                                            data[itkey] = checked
-                                            FirebaseDatabase.getInstance().getReference("detail/$customerId/$roomId/$key/$ckey").updateChildren(data)
-                                        },200)
-
+                                        val data = HashMap<String,Any>()
+                                        data[itkey] = checked
+                                        FirebaseDatabase.getInstance().getReference("detail/$customerId/$roomId/$key/$ckey").updateChildren(data)
                                     }
                                 }
                                 cell.visibility = View.GONE
@@ -395,6 +384,9 @@ class DetailActivity : AppCompatActivity() {
                                 val view = rowParent.getChildAt(ind)
                                 if(view.visibility == View.VISIBLE) {
                                     view.collapse()
+                                    if(rowParent.getChildAt(ind+1).visibility == View.VISIBLE)
+                                        view.callOnClick()
+
                                     cell.arrow_first.setImageResource(R.drawable.ic_right_arrow)
                                 }else {
                                     view.expand(65.0)
@@ -430,7 +422,8 @@ class DetailActivity : AppCompatActivity() {
 
 
         })
-
+        var imagePos=0
+        val imageAdapterList = ArrayList<String>()
         FirebaseDatabase.getInstance().getReference("detail/$customerId/$roomId/images").addChildEventListener(object:ChildEventListener{
             override fun onCancelled(p0: DatabaseError?) {}
             override fun onChildMoved(p0: DataSnapshot?, p1: String?) {}
@@ -445,6 +438,7 @@ class DetailActivity : AppCompatActivity() {
                     }
                 }
                     val imageData = snap!!.getValue(imageClass::class.java)
+                    imageAdapterList.add(imageData!!.imageURL!!)
                     val image = ImageView(this@DetailActivity)
                     image.setBackgroundResource(R.drawable.border_all)
                     val params = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,100.dp)
@@ -454,17 +448,17 @@ class DetailActivity : AppCompatActivity() {
                     image.scaleType = ImageView.ScaleType.FIT_XY
                     image.elevation = (1.dp).toFloat()
                     image.layoutParams = params
+                    image.isClickable = true
 
-                    if(applicationContext!=null) {
-                        Glide.with(applicationContext)
-                                .load(imageData!!.imageURL)
-                                .thumbnail(Glide.with(this@DetailActivity).load(R.mipmap.image))
-                                .diskCacheStrategy(DiskCacheStrategy.ALL)
-                                .crossFade()
-                                .into(image)
-                        imageListData.addView(image)
-                    }
 
+                    Glide.with(applicationContext)
+                            .load(imageData.imageURL)
+                            .thumbnail(Glide.with(this@DetailActivity).load(R.mipmap.image))
+                            .diskCacheStrategy(DiskCacheStrategy.ALL)
+                            .crossFade()
+                            .into(image)
+                    imageListData.addView(image)
+                image.setOnClickListener(ImageClickListener(imageAdapterList,imageData.imageURL!!,applicationContext,this@DetailActivity))
                 if(addedNewImage) {
                     Handler().postDelayed({
                         imageList.fullScroll(View.FOCUS_RIGHT)
@@ -472,7 +466,7 @@ class DetailActivity : AppCompatActivity() {
                         loaderImage.visibility = View.GONE
                     },350)
                 }
-
+                imagePos++
             }
 
 
@@ -481,6 +475,57 @@ class DetailActivity : AppCompatActivity() {
         back.setOnClickListener {
             finish()
         }
+        closeImageGallery.setOnClickListener {
+            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+            allItems.visibility = View.VISIBLE
+            allItems.alpha = 1f
+            back.isClickable = true
+            imageGallery.visibility = View.GONE
+
+        }
+
+        dragToClose.setOnTouchListener { p0, event ->
+            if(event!!.action == MotionEvent.ACTION_UP || event.action == MotionEvent.ACTION_POINTER_UP){
+
+                Handler().postDelayed( {
+                    if(imageGallery.alpha > 0.1f)
+                        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN
+                    else {
+                        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+                        imageGallery.visibility = View.GONE
+                        allItems.visibility = View.VISIBLE
+                        allItems.alpha = 1f
+                        back.isClickable = true
+
+                    }
+                },350)
+            }
+
+            false
+        }
+
+        dragToClose.setDragListener(object:DragListener{
+            override fun onViewCosed() {
+                window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+                imageGallery.visibility = View.GONE
+                allItems.visibility = View.VISIBLE
+                allItems.alpha = 1f
+                back.isClickable = true
+
+            }
+
+            override fun onStartDraggingView() {
+                window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+                allItems.visibility = View.VISIBLE
+                allItems.alpha = 0.5f
+                back.isClickable = false
+            }
+
+        })
         addImage.setOnClickListener {
             val builder = AlertDialog.Builder(this)
             builder.setCancelable(true)
@@ -492,7 +537,7 @@ class DetailActivity : AppCompatActivity() {
                     0->{
                         val intent = Intent()
                         intent.type = "image/*"
-                        intent.action = Intent.ACTION_GET_CONTENT
+                        intent.action = Intent.ACTION_PICK
                         startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE)
                     }
                     1->{
@@ -553,6 +598,36 @@ class DetailActivity : AppCompatActivity() {
     }
 
 
+    internal class ImageClickListener(val urls: ArrayList<String>,val current:String,val context:Context,val window:Activity): View.OnClickListener {
+        override fun onClick(v:View) {
+            window.loader.visibility = View.VISIBLE
+            window.window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN
+            window.imageGallery.alpha = 1f
+            Handler().postDelayed({
+                window.loader.visibility = View.GONE
+                window.allItems.visibility = View.GONE
+                window.imageGallery.visibility = View.VISIBLE
+                window.imagePager.adapter = imagePagerAdapter(window,urls)
+                window.imagePager.setCurrentItem(urls.indexOf(current))
+                window.imageGallery.bringToFront()
+                window.imagePager.setOnPageChangeListener(object:ViewPager.OnPageChangeListener{
+                    override fun onPageScrollStateChanged(state: Int) {}
+                    override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
+                        window.imageList.scrolltoIndex(position,window.imageListData)
+                    }
+
+                    override fun onPageSelected(position: Int) {}
+
+                })
+            },350)
+
+
+        }
+        fun HorizontalScrollView.scrolltoIndex(position:Int,wrapper:LinearLayout){
+            val x = wrapper.getChildAt(position).left
+            this.scrollX = x
+        }
+    }
     val Int.dp: Int get() = (this * resources.displayMetrics.density).toInt()
 
     fun rand(min:Int,max:Int):Int{
