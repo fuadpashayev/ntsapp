@@ -477,7 +477,6 @@ class DetailActivity : AppCompatActivity() {
         }
         closeImageGallery.setOnClickListener {
             window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
             allItems.visibility = View.VISIBLE
             allItems.alpha = 1f
             back.isClickable = true
@@ -493,7 +492,6 @@ class DetailActivity : AppCompatActivity() {
                         window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN
                     else {
                         window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
                         imageGallery.visibility = View.GONE
                         allItems.visibility = View.VISIBLE
                         allItems.alpha = 1f
@@ -509,7 +507,6 @@ class DetailActivity : AppCompatActivity() {
         dragToClose.setDragListener(object:DragListener{
             override fun onViewCosed() {
                 window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
                 imageGallery.visibility = View.GONE
                 allItems.visibility = View.VISIBLE
                 allItems.alpha = 1f
@@ -519,7 +516,6 @@ class DetailActivity : AppCompatActivity() {
 
             override fun onStartDraggingView() {
                 window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
                 allItems.visibility = View.VISIBLE
                 allItems.alpha = 0.5f
                 back.isClickable = false

@@ -21,6 +21,8 @@ import android.widget.TextView
 
 
 
+
+
 class MainActivity : AppCompatActivity() {
 
     var user:FirebaseUser?=null
@@ -132,4 +134,5 @@ class MainActivity : AppCompatActivity() {
 
         }
     }
+
 }
